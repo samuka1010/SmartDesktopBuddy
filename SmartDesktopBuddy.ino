@@ -1189,15 +1189,15 @@ void setup() {
 
 void updatePageAndfirmware() {
   const String& pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html?t=" + String(millis());
-  const String& firmwareUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/firmware.bin";
+  const String& firmwareUrl = "https://samuka1010.github.io/SmartDesktopBuddy/build/esp8266.esp8266.d1_mini_clone/SmartDesktopBuddy.ino.bin";
 
   const String& caminhoLocal = "/index.html";
   HTTPClient http;
   WiFiClientSecure client;
   client.setInsecure();
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  
-
+  P.print("Atualizando");
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   bool updateSuccessful = true;
 
@@ -1218,7 +1218,6 @@ void updatePageAndfirmware() {
   if (updateSuccessful) {
     Serial.print("Baixando: ");
     Serial.println(pageUrl);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     http.begin(client, pageUrl);
     http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
 
