@@ -1227,7 +1227,10 @@ void checkUpdate() {
 
       if (ultimaVersao != localFirmwareVersion) {
         Serial.println("Atualização disponível! Baixando...");
-
+        for(int i = 0; i<8;i++){
+          delay(800);
+          showLoader();
+        }
         Serial.println("Atualizando");
         Serial.println(urlFirmware);
         
@@ -1257,6 +1260,7 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
 
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   ESPhttpUpdate.onProgress([](size_t done, size_t total) {
+    Serial.println("progress", String(done), String(total))
    showLoader();
   });
 
@@ -1451,10 +1455,6 @@ void loop() {
   if (!updateChecked) {
     Serial.print("CHECANDO UPDATE");
     updateChecked = true;
-    for(int i = 0; i<10;i++){
-      delay(800);
-      showLoader();
-    }
     checkUpdate();
     P.displayClear();
   }
