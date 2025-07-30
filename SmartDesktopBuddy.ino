@@ -1260,8 +1260,8 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
 
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   ESPhttpUpdate.onProgress([](size_t done, size_t total) {
-    Serial.println("progress", String(done), String(total))
-   showLoader();
+    Serial.printf("progress", String(done), String(total));
+    showLoader();
   });
 
   switch (ret) {
