@@ -133,6 +133,12 @@ const unsigned long descriptionDuration = 3000;    // 3s for short text
 static unsigned long descScrollEndTime = 0;        // for post-scroll delay (re-used for scroll timing)
 const unsigned long descriptionScrollPause = 300;  // 300ms pause after scroll
 
+// Loading interface
+bool loadingInterface = true;
+const unsigned long loaderInterval = 800;
+String loadingFrame = ".";
+unsigned long lastLoaderAnim = 0;
+
 // Scroll flipped
 textEffect_t getEffectiveScrollDirection(textEffect_t desiredDirection, bool isFlipped) {
   if (isFlipped) {
@@ -1209,6 +1215,7 @@ void checkUpdate() {
 
       if (error) {
         Serial.println("Erro ao ler JSON!");
+        loadingInterface = false;
         return;
       }
 
@@ -1230,14 +1237,17 @@ void checkUpdate() {
         
       } else {
         Serial.println("Firmware já está atualizado.");
+        loadingInterface = false;
       }
     } else {
       Serial.printf("Erro HTTP ao buscar JSON: %d\n", httpCode);
+      loadingInterface = false;
     }
 
     http.end();
   } else {
     Serial.println("Falha ao conectar ao servidor JSON.");
+    loadingInterface = false;
   }
 
   
@@ -1252,9 +1262,11 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
       updateSuccessful = false;
       Serial.printf("Falha na atualização. Código: %d\n", ESPhttpUpdate.getLastError());
       Serial.println(ESPhttpUpdate.getLastErrorString());
+      loadingInterface = false;
       break;
     case HTTP_UPDATE_NO_UPDATES:
       Serial.println("Sem atualizações disponíveis.");
+      loadingInterface = false;
       break;
     case HTTP_UPDATE_OK:
       Serial.println("Atualização concluída. Reiniciando...");
@@ -1402,6 +1414,19 @@ bool saveCountdownConfig(bool enabled, time_t targetTimestamp, const String &lab
   return true;
 }
 
+void showLoader() {
+  if (millis() - lastLoaderAnim > loaderInterval) {
+    lastLoaderAnim = millis();
+    loadingFrame = String(loadingFrame) + ".|";
+    if (loadingFrame.length() == 6){
+      loadingFrame = ".";
+    }
+
+    P.displayClear();
+    P.displayText(loadingFrame.c_str(), PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
+    P.displayAnimate();
+  }
+}
 
 void loop() {
   if (isAPMode) {
@@ -1422,7 +1447,10 @@ void loop() {
   static unsigned long lastFetch = 0;
   const unsigned long fetchInterval = 300000;  // 5 minutes
 
-
+  if (loadingInterface) {
+    showLoader();
+    return;
+  }
 
   // AP Mode animation
   static unsigned long apAnimTimer = 0;
@@ -1713,8 +1741,7 @@ void loop() {
     yield();
     return;
   }
-
-
+  
 
   // --- WEATHER DESCRIPTION Display Mode ---
   if (displayMode == 2 && showWeatherDescription && weatherAvailable && weatherDescription.length() > 0) {
