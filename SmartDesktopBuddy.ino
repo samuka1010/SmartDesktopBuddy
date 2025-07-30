@@ -24,7 +24,7 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
-const String localFirmwareVersion = "0.0.3";
+const String localFirmwareVersion = "0.0.4";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -134,9 +134,10 @@ static unsigned long descScrollEndTime = 0;        // for post-scroll delay (re-
 const unsigned long descriptionScrollPause = 300;  // 300ms pause after scroll
 
 // Loading interface
+bool updateChecked = false;
 bool loadingInterface = true;
 const unsigned long loaderInterval = 800;
-String loadingFrame = ".";
+String loadingFrame = "-";
 unsigned long lastLoaderAnim = 0;
 
 // Scroll flipped
@@ -1183,7 +1184,6 @@ void setup() {
     Serial.println(F("[SETUP] WiFi state is uncertain after connection attempt."));
   }
 
-  checkUpdate();
   setupWebServer();
   Serial.println(F("[SETUP] Webserver setup complete"));
   Serial.println(F("[SETUP] Setup complete"));
@@ -1253,8 +1253,12 @@ void checkUpdate() {
 }
 
 void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
-  t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   bool updateSuccessful = true;
+
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
+  ESPhttpUpdate.onProgress([](size_t done, size_t total) {
+   showLoader();
+  });
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
@@ -1445,6 +1449,18 @@ void loop() {
 
   static unsigned long lastFetch = 0;
   const unsigned long fetchInterval = 300000;  // 5 minutes
+
+
+  if (!updateChecked) {
+    Serial.print("CHECANDO UPDATE");
+    updateChecked = true;
+    for(int i = 0; i<10;i++){
+      delay(800);
+      showLoader();
+    }
+    checkUpdate();
+    P.displayClear();
+  }
 
   if (loadingInterface) {
     showLoader();
