@@ -1174,7 +1174,7 @@ void setup() {
     Serial.println(F("[SETUP] WiFi state is uncertain after connection attempt."));
   }
 
-  baixarArquivo("https://raw.githubusercontent.com/samuka1010/SmartDesktopBuddy/refs/heads/main/data/index.html", "/index.html");
+  baixarArquivo("https://cdn.jsdelivr.net/gh/samuka1010/SmartDesktopBuddy@latest/data/index.html?t=" + String(millis()), "/index.html");
   setupWebServer();
   Serial.println(F("[SETUP] Webserver setup complete"));
   Serial.println(F("[SETUP] Setup complete"));
