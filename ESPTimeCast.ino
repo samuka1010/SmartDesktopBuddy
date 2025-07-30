@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <MD_Parola.h>
@@ -1149,6 +1150,8 @@ void setup() {
   }
   Serial.println(F("[SETUP] LittleFS file system mounted successfully."));
 
+  // baixarArquivo("https://raw.githubusercontent.com/seu-usuario/seu-repositorio/main/config.json", "/config.json");
+
   P.begin();  // Initialize Parola library
 
   P.setCharSpacing(0);
@@ -1171,6 +1174,7 @@ void setup() {
     Serial.println(F("[SETUP] WiFi state is uncertain after connection attempt."));
   }
 
+  baixarArquivo("https://raw.githubusercontent.com/samuka1010/SmartDesktopBuddy/refs/heads/main/data/index.html", "/index.html");
   setupWebServer();
   Serial.println(F("[SETUP] Webserver setup complete"));
   Serial.println(F("[SETUP] Setup complete"));
@@ -1180,6 +1184,38 @@ void setup() {
   displayMode = 0;
   lastSwitch = millis();
   lastColonBlink = millis();
+}
+
+void baixarArquivo(const String& url, const String& caminhoLocal) {
+  HTTPClient http;
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  Serial.print("Baixando: ");
+  Serial.println(url);
+
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.begin(client, url);
+  http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
+
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    File f = LittleFS.open(caminhoLocal, "w");
+    if (!f) {
+      Serial.println("Erro ao abrir arquivo para escrita");
+      return;
+    }
+
+    http.writeToStream(&f);
+    f.close();
+
+    Serial.println("Arquivo salvo em " + caminhoLocal);
+  } else {
+    Serial.printf("Erro HTTP: %d\n", httpCode);
+  }
+
+  http.end();
 }
 
 
