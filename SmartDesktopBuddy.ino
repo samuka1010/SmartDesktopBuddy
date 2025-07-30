@@ -1175,6 +1175,7 @@ void setup() {
     Serial.println(F("[SETUP] WiFi state is uncertain after connection attempt."));
   }
 
+  Serial.println("COMEÇANDO UPDATE");
   updatePageAndfirmware();
   setupWebServer();
   Serial.println(F("[SETUP] Webserver setup complete"));
@@ -1197,8 +1198,9 @@ void updatePageAndfirmware() {
   client.setInsecure();
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  P.print("Atualizando");
-  Serial.printf("Atualizando", firmwareUrl);
+  P.print("Atualizando ATTTT");
+  Serial.println("Atualizando");
+  Serial.println(firmwareUrl);
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   bool updateSuccessful = true;
 
