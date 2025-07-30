@@ -24,7 +24,7 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
-const String localFirmwareVersion = "0.0.4";
+const String localFirmwareVersion = "0.0.5";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -137,7 +137,7 @@ const unsigned long descriptionScrollPause = 300;  // 300ms pause after scroll
 bool updateChecked = false;
 bool loadingInterface = true;
 const unsigned long loaderInterval = 800;
-String loadingFrame = "-";
+String loadingFrame = ".";
 unsigned long lastLoaderAnim = 0;
 
 // Scroll flipped
@@ -1418,9 +1418,7 @@ bool saveCountdownConfig(bool enabled, time_t targetTimestamp, const String &lab
 }
 
 void showLoader() {
-  if (millis() - lastLoaderAnim > loaderInterval) {
-    lastLoaderAnim = millis();
-    loadingFrame = String(loadingFrame) + "-";
+    loadingFrame = String(loadingFrame) + ".";
     if (loadingFrame.length() == 6){
       loadingFrame = ".";
     }
@@ -1428,7 +1426,6 @@ void showLoader() {
     P.displayClear();
     P.displayText(loadingFrame.c_str(), PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
     P.displayAnimate();
-  }
 }
 
 void loop() {
