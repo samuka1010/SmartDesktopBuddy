@@ -24,7 +24,7 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
-const String localFirmwareVersion = "0.0.5";
+const String localFirmwareVersion = "0.0.8";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -1258,11 +1258,12 @@ void checkUpdate() {
 void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
   bool updateSuccessful = true;
 
-  t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   ESPhttpUpdate.onProgress([](size_t done, size_t total) {
     Serial.printf("progress", String(done), String(total));
     showLoader();
   });
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
+  
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
