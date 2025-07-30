@@ -24,6 +24,8 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
+const String localFirmwareVersion = "0.0.1";
+
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
 
@@ -1175,8 +1177,7 @@ void setup() {
     Serial.println(F("[SETUP] WiFi state is uncertain after connection attempt."));
   }
 
-  Serial.println("COMEÇANDO UPDATE");
-  updatePageAndfirmware();
+  checkUpdate();
   setupWebServer();
   Serial.println(F("[SETUP] Webserver setup complete"));
   Serial.println(F("[SETUP] Setup complete"));
@@ -1188,19 +1189,61 @@ void setup() {
   lastColonBlink = millis();
 }
 
-void updatePageAndfirmware() {
-  const String& pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html?t=" + String(millis());
-  const String& firmwareUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/SmartDesktopBuddy.ino.bin?t=" + String(millis());
+void checkUpdate() {
+  const String jsonUrl = "https://samuka1010.github.io/SmartDesktopBuddy/firmware.json?t=" + String(millis());
 
-  const String& caminhoLocal = "/index.html";
   HTTPClient http;
   WiFiClientSecure client;
   client.setInsecure();
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  P.print("Atualizando ATTTT");
-  Serial.println("Atualizando");
-  Serial.println(firmwareUrl);
+  if (http.begin(client, jsonUrl)) {
+    int httpCode = http.GET();
+
+    if (httpCode == 200) {
+      String payload = http.getString();
+      Serial.println("JSON recebido:");
+
+      DynamicJsonDocument doc(1024);
+      DeserializationError error = deserializeJson(doc, payload);
+
+      if (error) {
+        Serial.println("Erro ao ler JSON!");
+        return;
+      }
+
+      String ultimaVersao = doc["version"];
+      String urlFirmware = doc["firmware"];
+
+      Serial.println("Versão remota: " + ultimaVersao);
+      Serial.println("Versão local: " + localFirmwareVersion);
+
+      if (ultimaVersao != localFirmwareVersion) {
+        Serial.println("Atualização disponível! Baixando...");
+
+        P.print("Atualizando");
+        Serial.println("Atualizando");
+        Serial.println(urlFirmware);
+        
+        updateFirmware(client, urlFirmware);
+
+        
+      } else {
+        Serial.println("Firmware já está atualizado.");
+      }
+    } else {
+      Serial.printf("Erro HTTP ao buscar JSON: %d\n", httpCode);
+    }
+
+    http.end();
+  } else {
+    Serial.println("Falha ao conectar ao servidor JSON.");
+  }
+
+  
+}
+
+void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   bool updateSuccessful = true;
 
@@ -1218,33 +1261,39 @@ void updatePageAndfirmware() {
       break;
   }
 
-  if (updateSuccessful) {
-    Serial.print("Baixando: ");
-    Serial.println(pageUrl);
-    http.begin(client, pageUrl);
-    http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
-
-    int httpCode = http.GET();
-
-    if (httpCode == HTTP_CODE_OK) {
-      File f = LittleFS.open(caminhoLocal, "w");
-      if (!f) {
-        Serial.println("Erro ao abrir arquivo para escrita");
-        return;
-      }
-
-      http.writeToStream(&f);
-      f.close();
-
-      Serial.println("Arquivo salvo em " + caminhoLocal);
-    } else {
-      Serial.printf("Erro HTTP: %d\n", httpCode);
-    }
-
-    http.end();
-  }
+  updatePage();
 }
 
+void updatePage() {
+  HTTPClient http;
+
+  const String& caminhoLocal = "/index.html";
+  const String pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html?t=" + String(millis());
+
+  Serial.print("Baixando index.html: ");
+  Serial.println(pageUrl);
+  http.begin(client, pageUrl);
+  http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
+
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    File f = LittleFS.open(caminhoLocal, "w");
+    if (!f) {
+      Serial.println("Erro ao abrir arquivo para escrita");
+      return;
+    }
+
+    http.writeToStream(&f);
+    f.close();
+
+    Serial.println("Arquivo salvo em " + caminhoLocal);
+  } else {
+    Serial.printf("Erro HTTP: %d\n", httpCode);
+  }
+
+  http.end();
+}
 
 
 void advanceDisplayMode() {
