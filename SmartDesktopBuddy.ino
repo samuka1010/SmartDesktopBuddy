@@ -24,7 +24,7 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
-const String localFirmwareVersion = "0.0.8";
+const String localFirmwareVersion = "0.0.9";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -1227,16 +1227,10 @@ void checkUpdate() {
 
       if (ultimaVersao != localFirmwareVersion) {
         Serial.println("Atualização disponível! Baixando...");
-        for(int i = 0; i<8;i++){
-          delay(800);
-          showLoader();
-        }
         Serial.println("Atualizando");
         Serial.println(urlFirmware);
         
         updateFirmware(client, urlFirmware);
-
-        
       } else {
         Serial.println("Firmware já está atualizado.");
         loadingInterface = false;
@@ -1258,9 +1252,14 @@ void checkUpdate() {
 void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
   bool updateSuccessful = true;
 
-  ESPhttpUpdate.onProgress([](size_t done, size_t total) {
-    Serial.printf("progress", String(done), String(total));
+  ESPhttpUpdate.onStart([]() {
     showLoader();
+  });
+  ESPhttpUpdate.onProgress([](size_t done, size_t total) {
+    showLoader();
+  });
+  ESPhttpUpdate.onEnd([]() {
+    P.displayClear();
   });
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, firmwareUrl);
   
@@ -1423,6 +1422,8 @@ bool saveCountdownConfig(bool enabled, time_t targetTimestamp, const String &lab
 }
 
 void showLoader() {
+  if (millis() - lastLoaderAnim > loaderInterval) {
+    lastLoaderAnim = millis();
     loadingFrame = String(loadingFrame) + ".";
     if (loadingFrame.length() == 6){
       loadingFrame = ".";
@@ -1431,6 +1432,7 @@ void showLoader() {
     P.displayClear();
     P.displayText(loadingFrame.c_str(), PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
     P.displayAnimate();
+  }
 }
 
 void loop() {
