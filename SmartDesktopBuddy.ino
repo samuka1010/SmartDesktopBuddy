@@ -24,7 +24,7 @@
 #define DATA_PIN 15
 #define CS_PIN 13
 
-const String localFirmwareVersion = "0.0.1";
+const String localFirmwareVersion = "0.0.3";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -1228,7 +1228,6 @@ void checkUpdate() {
       if (ultimaVersao != localFirmwareVersion) {
         Serial.println("Atualização disponível! Baixando...");
 
-        P.print("Atualizando");
         Serial.println("Atualizando");
         Serial.println(urlFirmware);
         
@@ -1417,7 +1416,7 @@ bool saveCountdownConfig(bool enabled, time_t targetTimestamp, const String &lab
 void showLoader() {
   if (millis() - lastLoaderAnim > loaderInterval) {
     lastLoaderAnim = millis();
-    loadingFrame = String(loadingFrame) + ".|";
+    loadingFrame = String(loadingFrame) + "-";
     if (loadingFrame.length() == 6){
       loadingFrame = ".";
     }
