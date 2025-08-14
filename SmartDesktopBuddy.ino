@@ -25,7 +25,7 @@
 #define CS_PIN 13
 #define BUTTON_PIN 4
 
-const String localFirmwareVersion = "0.0.9";
+const String localFirmwareVersion = "0.1.0";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -720,7 +720,6 @@ String buildWeatherURL() {
 
   return base;
 }
-
 
 
 void fetchWeather() {
