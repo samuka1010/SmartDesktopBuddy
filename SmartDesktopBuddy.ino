@@ -892,12 +892,12 @@ void checkUpdate() {
       Serial.println("Versão remota: " + ultimaVersao);
       Serial.println("Versão local: " + localFirmwareVersion);
 
-      if (ultimaVersao != localFirmwareVersion) {
+      if (ultimaVersao != localFirmwareVersion || true) {
         Serial.println("Atualização disponível! Baixando...");
         Serial.println("Atualizando");
         Serial.println(urlFirmware);
-        
-        updateFirmware(client, urlFirmware);
+        updatePage();
+        // updateFirmware(client, urlFirmware);
       } else {
         Serial.println("Firmware já está atualizado.");
         loadingInterface = false;
@@ -942,7 +942,6 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
       loadingInterface = false;
       break;
     case HTTP_UPDATE_OK:
-      updatePage();
       Serial.println("Atualização concluída. Reiniciando...");
       break;
   }
@@ -951,13 +950,17 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
 
 void updatePage() {
   HTTPClient http;
+  WiFiClientSecure client;
+  client.setInsecure();
 
   const String& caminhoLocal = "/index.html";
-  const String pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html?t=" + String(millis());
+  const String pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html";
 
   Serial.print("Baixando index.html: ");
   Serial.println(pageUrl);
   http.begin(client, pageUrl);
+
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
 
   int httpCode = http.GET();
