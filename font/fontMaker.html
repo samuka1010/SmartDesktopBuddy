@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Font Generator para MD_Parola</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto; }
+    table { border-collapse: collapse; margin-bottom: 1rem; }
+    td {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #aaa;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+    }
+    td.on {
+      background: black;
+    }
+    #output, #reverse-input {
+      font-family: monospace;
+      background: #f0f0f0;
+      padding: 0.5rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Fonte para MD_Parola</h1>
+
+  <h2>🖱️ Desenhar caractere</h2>
+  <p>Clique nas células para ligar/desligar os pixels. Ajuste a largura e gere o array.</p>
+  <table id="grid"></table>
+  <label for="width">Largura (colunas):</label>
+  <input type="number" id="width" value="5" min="1" max="8">
+  <button onclick="generate()">Gerar</button>
+  <pre id="output"></pre>
+
+  <h2>📥 Visualizar caractere a partir do array</h2>
+  <p>Insira a sequência no formato: <code>5, 124, 10, 10, 124</code></p>
+  <input id="reverse-input" placeholder="Ex: 3, 124, 10, 124">
+  <button onclick="loadFromArray()">Carregar</button>
+
+  <script>
+    const rows = 8;
+    const cols = 8;
+    const grid = document.getElementById('grid');
+    const output = document.getElementById('output');
+    const widthInput = document.getElementById('width');
+    const reverseInput = document.getElementById('reverse-input');
+
+    function createGrid() {
+      grid.innerHTML = '';
+      for (let r = 0; r < rows; r++) {
+        const row = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement('td');
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.onclick = () => {
+            cell.classList.toggle('on');
+          };
+          row.appendChild(cell);
+        }
+        grid.appendChild(row);
+      }
+    }
+
+    function generate() {
+      const width = parseInt(widthInput.value);
+      const bytes = [];
+
+      for (let c = 0; c < width; c++) {
+        let byte = 0;
+        for (let r = 0; r < rows; r++) {
+          const cell = grid.querySelector(`td[data-row="${r}"][data-col="${c}"]`);
+          if (cell && cell.classList.contains('on')) {
+            byte |= (1 << r);
+          }
+        }
+        bytes.push(byte);
+      }
+
+      output.textContent = `${width}, ${bytes.join(', ')}`;
+    }
+
+    function loadFromArray() {
+      const input = reverseInput.value.trim();
+      if (!input) return;
+
+      const values = input.split(',').map(v => parseInt(v.trim()));
+      const width = values[0];
+      const bytes = values.slice(1);
+
+      widthInput.value = width;
+
+      // limpa grade
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = grid.querySelector(`td[data-row="${r}"][data-col="${c}"]`);
+          if (cell) cell.classList.remove('on');
+        }
+      }
+
+      // aplica os bytes
+      for (let c = 0; c < width; c++) {
+        const byte = bytes[c];
+        for (let r = 0; r < rows; r++) {
+          const bit = (byte >> r) & 1;
+          const cell = grid.querySelector(`td[data-row="${r}"][data-col="${c}"]`);
+          if (cell && bit) cell.classList.add('on');
+        }
+      }
+    }
+
+    createGrid();
+  </script>
+</body>
+</html>
