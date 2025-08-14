@@ -864,6 +864,8 @@ void setup() {
 
 void checkUpdate() {
   const String jsonUrl = "https://samuka1010.github.io/SmartDesktopBuddy/firmware.json?t=" + String(millis());
+  const String pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html";
+  const String localPath = "/index.html";
 
   HTTPClient http;
   WiFiClientSecure client;
@@ -896,8 +898,28 @@ void checkUpdate() {
         Serial.println("Atualização disponível! Baixando...");
         Serial.println("Atualizando");
         Serial.println(urlFirmware);
-        updatePage();
-        // updateFirmware(client, urlFirmware);
+        Serial.print("Baixando index.html: ");
+        Serial.println(pageUrl);
+        http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        http.begin(client, pageUrl);
+
+        int httpCode = http.GET();
+
+        if (httpCode == HTTP_CODE_OK) {
+          File f = LittleFS.open(localPath, "w");
+          if (!f) {
+            Serial.println("Erro ao abrir arquivo para escrita");
+            return;
+          }
+
+          http.writeToStream(&f);
+          f.close();
+
+          Serial.println("Arquivo salvo em " + localPath);
+        } else {
+          Serial.printf("Erro HTTP: %d\n", httpCode);
+        }
+        updateFirmware(client, urlFirmware);
       } else {
         Serial.println("Firmware já está atualizado.");
         loadingInterface = false;
@@ -946,41 +968,6 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
       break;
   }
 
-}
-
-void updatePage() {
-  HTTPClient http;
-  WiFiClientSecure client;
-  client.setInsecure();
-
-  const String& caminhoLocal = "/index.html";
-  const String pageUrl = "https://samuka1010.github.io/SmartDesktopBuddy/data/index.html";
-
-  Serial.print("Baixando index.html: ");
-  Serial.println(pageUrl);
-  http.begin(client, pageUrl);
-
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  http.setUserAgent("ESP8266-Agent");  // Adiciona User-Agent
-
-  int httpCode = http.GET();
-
-  if (httpCode == HTTP_CODE_OK) {
-    File f = LittleFS.open(caminhoLocal, "w");
-    if (!f) {
-      Serial.println("Erro ao abrir arquivo para escrita");
-      return;
-    }
-
-    http.writeToStream(&f);
-    f.close();
-
-    Serial.println("Arquivo salvo em " + caminhoLocal);
-  } else {
-    Serial.printf("Erro HTTP: %d\n", httpCode);
-  }
-
-  http.end();
 }
 
 

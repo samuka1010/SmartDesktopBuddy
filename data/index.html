@@ -999,34 +999,14 @@ function setDimmingFieldsEnabled(enabled) {
 }
 
 function getLocation() {
-  fetch('http://www.geoplugin.net/json.gp')
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('openWeatherCity').value = data.geoplugin_latitude;
-      document.getElementById('openWeatherCountry').value = data.geoplugin_longitude;
-
-      const button = document.getElementById('geo-button');
-      let label = data.geoplugin_city;
-      if (!label) label = data.geoplugin_region;
-      if (!label) label = data.geoplugin_countryName;
-      if (!label) label = "Location Found";
-
-      button.textContent = "Localização: " + label;
-      button.disabled = true;
-      button.classList.add('geo-disabled');
-
-      console.log("Location fetched via GeoPlugin. Consider crediting them: https://www.geoplugin.com/");
-    })
-    .catch(error => {
-      alert(
-        "Failed to guess your location.\n\n" +
-        "This may happen if:\n" +
-        "- You are using an AdBlocker (GeoPlugin might be blocked)\n" +
-        "- There is a network issue\n" +
-        "- The website might be temporarily down.\n\n" +
-        "You can visit  https://openweathermap.org/find  to manually search for your city and get latitude/longitude."
-      );
-    });
+  navigator.geolocation.getCurrentPosition((position) => {
+    document.getElementById('openWeatherCity').value = position.coords.latitude;
+    document.getElementById('openWeatherCountry').value = position.coords.longitude;
+    button.disabled = true;
+    button.classList.add('geo-disabled');
+  }, () => {
+    alert("ocorreu um erro ao buscar a localização");
+  });
 }
 </script>
 </body>
