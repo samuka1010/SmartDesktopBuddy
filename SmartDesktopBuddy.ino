@@ -25,7 +25,7 @@
 #define CS_PIN 13
 #define BUTTON_PIN 4
 
-const String localFirmwareVersion = "0.1.0";
+const String localFirmwareVersion = "0.1.1";
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 AsyncWebServer server(80);
@@ -942,11 +942,11 @@ void updateFirmware(WiFiClientSecure client, String firmwareUrl) {
       loadingInterface = false;
       break;
     case HTTP_UPDATE_OK:
+      updatePage();
       Serial.println("Atualização concluída. Reiniciando...");
       break;
   }
 
-  updatePage();
 }
 
 void updatePage() {
